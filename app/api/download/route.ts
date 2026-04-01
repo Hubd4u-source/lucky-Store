@@ -1,6 +1,6 @@
 import { FieldValue } from 'firebase-admin/firestore'
 import { NextRequest, NextResponse } from 'next/server'
-import { getDownloadUrl } from '@/lib/blob'
+import { getBlobUrl, getDownloadUrl } from '@/lib/blob'
 
 export const runtime = 'nodejs'
 
@@ -89,7 +89,12 @@ async function handleDownload(request: NextRequest): Promise<NextResponse> {
   let url: string
 
   if (data.fileStoragePath.startsWith('blob-assets/')) {
-    url = `/api/download/file/${assetId}`
+    url = getDownloadUrl(
+      getBlobUrl(data.fileStoragePath, {
+        access: 'public',
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      })
+    )
   } else if (/^https?:\/\//i.test(data.fileStoragePath)) {
     url = getDownloadUrl(data.fileStoragePath)
   } else {

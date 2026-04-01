@@ -101,7 +101,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const body = new Uint8Array(await request.arrayBuffer())
     const blob = (await put(getPathname(kind, assetId, filename), body, {
-      access: kind === 'preview' ? 'public' : 'private',
+      access: 'public',
       addRandomSuffix: false,
       contentType,
       token: process.env.BLOB_READ_WRITE_TOKEN,

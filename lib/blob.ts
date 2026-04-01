@@ -58,8 +58,11 @@ function constructBlobUrl(
 }
 
 function inferAccessFromPathname(pathnameOrUrl: string): BlobAccess {
-  if (pathnameOrUrl.startsWith('blob-assets/')) {
-    return 'private'
+  if (
+    pathnameOrUrl.startsWith('blob-assets/') ||
+    pathnameOrUrl.startsWith('blob-previews/')
+  ) {
+    return 'public'
   }
 
   return 'public'
@@ -128,6 +131,17 @@ export function getDownloadUrl(blobUrl: string): string {
   return url.toString()
 }
 
+export function getBlobUrl(
+  pathname: string,
+  options?: {
+    access?: BlobAccess
+    token?: string
+  }
+): string {
+  const token = getToken(options?.token)
+  return constructBlobUrl(pathname, options?.access ?? inferAccessFromPathname(pathname), token)
+}
+
 export async function del(
   urlOrPathname: string,
   options?: {
@@ -151,29 +165,4 @@ export async function del(
   if (!response.ok) {
     throw new Error(await readErrorMessage(response))
   }
-}
-
-export async function getPrivateBlob(
-  pathname: string,
-  options?: {
-    token?: string
-  }
-): Promise<Response | null> {
-  const token = getToken(options?.token)
-  const response = await fetch(constructBlobUrl(pathname, 'private', token), {
-    method: 'GET',
-    headers: {
-      authorization: `Bearer ${token}`,
-    },
-  })
-
-  if (response.status === 404) {
-    return null
-  }
-
-  if (!response.ok) {
-    throw new Error(await readErrorMessage(response))
-  }
-
-  return response
 }
