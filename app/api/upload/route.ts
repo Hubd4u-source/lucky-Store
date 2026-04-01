@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth } from '@/lib/firebase-admin'
 import { ADMIN_SESSION_COOKIE_NAME, assertAdminIdentity } from '@/lib/auth'
 import { put } from '@/lib/blob'
 import type { BlobPutResult } from '@/types/blob'
@@ -53,6 +52,8 @@ async function assertAdminSession(request: NextRequest): Promise<void> {
     return
   }
 
+  const { adminAuth } =
+    (await import('@/lib/firebase-admin')) as typeof import('@/lib/firebase-admin')
   const decoded = await adminAuth.verifySessionCookie(sessionCookie, true)
   assertAdminIdentity({
     email: decoded.email,
