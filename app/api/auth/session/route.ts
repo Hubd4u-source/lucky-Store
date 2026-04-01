@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   ADMIN_SESSION_COOKIE_NAME,
   ADMIN_SESSION_DURATION_MS,
-  getAdminUid,
-  getAdminEmail,
+  getAdminUids,
+  getAdminEmails,
   hasAdminIdentityConfig,
 } from '@/lib/auth'
 
@@ -13,15 +13,15 @@ export const runtime = 'nodejs'
 function buildAccessDeniedMessage(
   decodedEmail: string | null,
   decodedUid: string | null,
-  adminEmail: string | null,
-  adminUid: string | null
+  adminEmails: string[],
+  adminUids: string[]
 ): string {
   if (process.env.NODE_ENV === 'production') {
     return 'Access denied.'
   }
 
   const actual = decodedEmail ?? 'unknown'
-  const expectedParts = [adminEmail, adminUid].filter(Boolean).join(' or ')
+  const expectedParts = [...adminEmails, ...adminUids].filter(Boolean).join(' or ')
   return `Access denied. Signed in as ${actual} (uid ${decodedUid ?? 'unknown'}), expected ${expectedParts}.`
 }
 
@@ -52,8 +52,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'Missing token' }, { status: 400 })
     }
 
-    const adminEmail = getAdminEmail()
-    const adminUid = getAdminUid()
+    const adminEmails = getAdminEmails()
+    const adminUids = getAdminUids()
     if (!hasAdminIdentityConfig()) {
       return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
     }
@@ -64,13 +64,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const decodedEmail = decoded.email?.trim().toLowerCase()
     const decodedUid = decoded.uid?.trim() ?? null
 
-    const emailMatches =
-      Boolean(adminEmail) && Boolean(decodedEmail) && decodedEmail === adminEmail!.toLowerCase()
-    const uidMatches = Boolean(adminUid) && Boolean(decodedUid) && decodedUid === adminUid
+    const emailMatches = Boolean(decodedEmail) && adminEmails.includes(decodedEmail!)
+    const uidMatches = Boolean(decodedUid) && adminUids.includes(decodedUid!)
 
     if (!emailMatches && !uidMatches) {
       return NextResponse.json(
-        { error: buildAccessDeniedMessage(decodedEmail ?? null, decodedUid, adminEmail, adminUid) },
+        { error: buildAccessDeniedMessage(decodedEmail ?? null, decodedUid, adminEmails, adminUids) },
         { status: 403 }
       )
     }

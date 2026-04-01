@@ -19,6 +19,7 @@ const MAX_WIDTH_CLASSES: Record<string, string> = {
   "560px": "max-w-[560px]",
   "640px": "max-w-[640px]",
   "800px": "max-w-[800px]",
+  "960px": "max-w-[960px]",
 }
 
 function Modal({ open, onClose, title, children, className, maxWidth = "480px" }: ModalProps) {
@@ -63,7 +64,7 @@ function Modal({ open, onClose, title, children, className, maxWidth = "480px" }
     >
       <div
         className={cn(
-          "relative w-full border border-border-default bg-bg-surface p-8",
+          "relative max-h-[92vh] w-full overflow-y-auto border border-border-default bg-bg-surface p-5 md:p-8",
           widthClass,
           className
         )}

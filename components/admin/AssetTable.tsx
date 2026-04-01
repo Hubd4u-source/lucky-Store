@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { Edit, Eye, EyeOff, Trash } from "lucide-react"
 import type { AssetFormat } from "@/types"
 import { Badge } from "@/components/ui/Badge"
@@ -39,10 +40,13 @@ export function AssetTable({
 }: AssetTableProps) {
   return (
     <div className="w-full overflow-hidden border border-border-default bg-bg-surface">
-      <div className="flex items-center justify-between border-b border-border-default p-4">
+      <div className="flex flex-col gap-2 border-b border-border-default p-4 md:flex-row md:items-center md:justify-between">
         <span className="font-mono text-xs uppercase tracking-widest text-text-muted">
           {assets.length} assets
         </span>
+        <p className="text-xs leading-5 text-text-secondary md:text-right">
+          Tap a card to manage visibility, edit details, or jump to the public asset page.
+        </p>
       </div>
 
       <div className="hidden md:block">
@@ -159,7 +163,7 @@ export function AssetTable({
           const isPending = pendingAssetId === asset.id
 
           return (
-            <article key={asset.id} className="border border-border-default bg-bg-surface-2">
+            <article key={asset.id} className="overflow-hidden border border-border-default bg-bg-surface-2">
               <div className="flex gap-3 p-3">
                 <div className="relative h-[72px] w-[96px] shrink-0 overflow-hidden border border-border-default bg-bg-surface-3">
                   <Image
@@ -179,17 +183,22 @@ export function AssetTable({
                     <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
                       {asset.downloadCount} downloads
                     </span>
+                    {asset.sitePageIds?.length ? (
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
+                        {asset.sitePageIds.length} page{asset.sitePageIds.length === 1 ? "" : "s"}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 border-t border-border-default">
+              <div className="grid grid-cols-2 border-t border-border-default">
                 <button
                   type="button"
                   disabled={isPending}
                   onClick={() => onToggleVisibility(asset)}
                   className={cn(
-                    "border-r border-border-default px-3 py-3 font-mono text-[10px] uppercase tracking-widest transition-colors",
+                    "border-b border-r border-border-default px-3 py-3 font-mono text-[10px] uppercase tracking-widest transition-colors",
                     asset.visible ? "text-success" : "text-text-muted",
                     isPending && "opacity-50"
                   )}
@@ -200,10 +209,16 @@ export function AssetTable({
                   type="button"
                   disabled={isPending}
                   onClick={() => onEdit(asset)}
-                  className="border-r border-border-default px-3 py-3 font-mono text-[10px] uppercase tracking-widest text-text-secondary transition-colors hover:text-accent"
+                  className="border-b border-border-default px-3 py-3 font-mono text-[10px] uppercase tracking-widest text-text-secondary transition-colors hover:text-accent"
                 >
                   Edit
                 </button>
+                <Link
+                  href={`/assets/${asset.id}`}
+                  className="border-r border-border-default px-3 py-3 text-center font-mono text-[10px] uppercase tracking-widest text-text-secondary transition-colors hover:text-accent"
+                >
+                  View
+                </Link>
                 <button
                   type="button"
                   disabled={isPending}

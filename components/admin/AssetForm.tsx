@@ -6,8 +6,10 @@ import { v4 as uuidv4 } from "uuid"
 import { File as FileIcon, Image as ImageIcon } from "lucide-react"
 import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
+import { Select } from "@/components/ui/Select"
+import { Toggle } from "@/components/ui/Toggle"
 import type { BlobPutResult } from "@/types/blob"
-import type { Asset, AssetFormat } from "@/types"
+import type { Asset, AssetFormat, SitePage } from "@/types"
 import { UploadProgress } from "@/components/admin/UploadProgress"
 
 export type AdminAssetView = Omit<Asset, "createdAt" | "updatedAt"> & {
@@ -22,9 +24,13 @@ export type AssetMutationPayload = {
   title: string
   tags: string[]
   format: AssetFormat
+  description?: string
+  sitePageIds?: string[]
   visible: boolean
   previewUrl: string
   fileStoragePath: string
+  bundleSize?: string
+  fileCount?: number
   previousPreviewUrl?: string
   previousFileStoragePath?: string
 }
@@ -33,11 +39,16 @@ interface AssetFormValues {
   title: string
   tags: string
   format: AssetFormat
+  description: string
+  sitePageIds: string[]
+  bundleSize: string
+  fileCount: string
   visible: boolean
 }
 
 interface AssetFormProps {
   initialData?: AdminAssetView | null
+  availableSitePages: SitePage[]
   onSubmit: (data: AssetMutationPayload) => Promise<MutationResult>
   onSuccess: () => void
   onCancel: () => void
@@ -113,6 +124,7 @@ function getStoredFileName(pathValue?: string): string {
 
 export function AssetForm({
   initialData,
+  availableSitePages,
   onSubmit,
   onSuccess,
   onCancel,
@@ -129,12 +141,21 @@ export function AssetForm({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<AssetFormValues>({
     defaultValues: {
       title: initialData?.title ?? "",
       tags: initialData?.tags.join(", ") ?? "",
       format: initialData?.format ?? "PNG",
+      description: initialData?.description ?? "",
+      sitePageIds: initialData?.sitePageIds ?? [],
+      bundleSize: initialData?.bundleSize ?? "",
+      fileCount:
+        typeof initialData?.fileCount === "number" && Number.isFinite(initialData.fileCount)
+          ? String(initialData.fileCount)
+          : "",
       visible: initialData?.visible ?? true,
     },
   })
@@ -216,9 +237,13 @@ export function AssetForm({
           .map((tag) => tag.trim())
           .filter(Boolean),
         format: values.format,
+        description: values.description.trim() || undefined,
+        sitePageIds: values.sitePageIds,
         visible: values.visible,
         previewUrl: resolvedPreviewUrl,
         fileStoragePath: resolvedFileStoragePath,
+        bundleSize: values.bundleSize.trim() || undefined,
+        fileCount: values.fileCount.trim() ? Number.parseInt(values.fileCount.trim(), 10) : undefined,
         previousPreviewUrl: initialData?.previewUrl,
         previousFileStoragePath: initialData?.fileStoragePath,
       })
@@ -240,7 +265,7 @@ export function AssetForm({
 
   return (
     <form className="flex flex-col gap-6" onSubmit={submitForm}>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label className="font-mono text-[10px] uppercase tracking-widest text-text-secondary">
@@ -259,33 +284,29 @@ export function AssetForm({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="font-mono text-[10px] uppercase tracking-widest text-text-secondary">
-                Format
-              </label>
-              <select
-                className="border border-border-default bg-bg-surface-2 px-4 py-3 text-sm text-text-primary transition-colors focus:border-accent focus:outline-none"
-                {...register("format")}
-              >
-                <option value="PNG">PNG</option>
-                <option value="JPG">JPG</option>
-                <option value="SVG">SVG</option>
-                <option value="PACK">PACK</option>
-              </select>
-            </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.9fr)]">
+            <Select
+              label="Format"
+              options={[
+                { value: "PNG", label: "PNG" },
+                { value: "JPG", label: "JPG" },
+                { value: "SVG", label: "SVG" },
+                { value: "PACK", label: "PACK" },
+              ]}
+              {...register("format")}
+            />
 
             <div className="flex flex-col gap-2">
               <label className="font-mono text-[10px] uppercase tracking-widest text-text-secondary">
                 Visible
               </label>
-              <div className="flex h-[50px] items-center border border-border-default bg-bg-surface-2 px-4">
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input type="checkbox" className="h-4 w-4 accent-accent" {...register("visible")} />
-                  <span className="font-mono text-xs uppercase tracking-wider text-text-primary">
-                    Visible on store
-                  </span>
-                </label>
+              <div className="flex min-h-[88px] items-start border border-border-default bg-bg-surface-2 px-4 py-4">
+                <Toggle
+                  checked={watch("visible")}
+                  onCheckedChange={(checked) => setValue("visible", checked, { shouldDirty: true })}
+                  label="Visible on store"
+                  description="Show this asset in the public catalog."
+                />
               </div>
             </div>
           </div>
@@ -302,14 +323,100 @@ export function AssetForm({
               })}
             />
           </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="font-mono text-[10px] uppercase tracking-widest text-text-secondary">
+              Product Description
+            </label>
+            <textarea
+              rows={5}
+              className="w-full border border-border-strong bg-bg-surface-2 px-4 py-3 text-sm text-text-primary placeholder:text-text-muted transition-colors duration-150 focus:border-accent focus:outline-none"
+              placeholder="Describe what makes this asset useful, what it includes, and how creators might use it."
+              {...register("description")}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="font-mono text-[10px] uppercase tracking-widest text-text-secondary">
+              Show On Pages
+            </label>
+            <div className="grid max-h-[280px] gap-2 overflow-y-auto border border-border-default bg-bg-surface-2 p-4">
+              {availableSitePages.map((page) => {
+                const selected = watch("sitePageIds").includes(page.id)
+
+                return (
+                  <label key={page.id} className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm text-text-primary">{page.title}</p>
+                      <p className="break-all font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
+                        /pages/{page.slug}
+                      </p>
+                    </div>
+
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={(event) => {
+                        const current = watch("sitePageIds")
+                        const next = event.target.checked
+                          ? [...current, page.id]
+                          : current.filter((value) => value !== page.id)
+
+                        setValue("sitePageIds", next, { shouldDirty: true })
+                      }}
+                      className="h-4 w-4 accent-accent"
+                    />
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Bundle Size"
+              placeholder="e.g. 128 MB"
+              helperText="Shown on product cards and detail pages."
+              {...register("bundleSize")}
+            />
+
+            <Input
+              label="Files Included"
+              type="number"
+              min={1}
+              placeholder="e.g. 12"
+              helperText="Used for bundle metadata."
+              error={errors.fileCount?.message}
+              {...register("fileCount", {
+                validate: (value) => {
+                  if (!value.trim()) {
+                    return true
+                  }
+
+                  const parsed = Number.parseInt(value, 10)
+                  return parsed > 0 || "File count must be greater than zero."
+                },
+              })}
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 xl:border-l xl:border-border-subtle xl:pl-8">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
+              Uploads
+            </p>
+            <p className="mt-2 text-sm leading-6 text-text-secondary">
+              Add the preview image and source file here. This column stays focused on upload tasks
+              so the form is easier to scan.
+            </p>
+          </div>
+
           <div className="flex flex-col gap-2">
             <label className="font-mono text-[10px] uppercase tracking-widest text-text-secondary">
               Preview Image
             </label>
-            <div className="relative flex aspect-[4/3] cursor-pointer items-center justify-center overflow-hidden border border-dashed border-border-strong bg-bg-surface-2 transition-colors hover:border-accent">
+            <div className="relative flex aspect-[4/3] min-h-[240px] cursor-pointer items-center justify-center overflow-hidden border border-dashed border-border-strong bg-bg-surface-2 transition-colors hover:border-accent">
               {previewUrl ? (
                 <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
               ) : (
@@ -336,10 +443,10 @@ export function AssetForm({
             <label className="font-mono text-[10px] uppercase tracking-widest text-text-secondary">
               Asset File
             </label>
-            <div className="relative flex h-[80px] cursor-pointer items-center justify-center border border-dashed border-border-strong bg-bg-surface-2 px-4 transition-colors hover:border-accent">
+            <div className="relative flex min-h-[108px] cursor-pointer items-center justify-center border border-dashed border-border-strong bg-bg-surface-2 px-4 transition-colors hover:border-accent">
               <div className="flex items-center gap-3 text-text-muted transition-colors duration-150 hover:text-accent">
                 <FileIcon size={20} />
-                <span className="max-w-[220px] truncate font-mono text-[10px] uppercase tracking-widest">
+                <span className="max-w-[240px] truncate font-mono text-[10px] uppercase tracking-widest">
                   {assetFile ? assetFile.name : getStoredFileName(initialData?.fileStoragePath) || "Upload Asset File"}
                 </span>
               </div>

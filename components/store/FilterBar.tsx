@@ -8,8 +8,8 @@ import type { AssetFormat, AssetSortBy } from "@/types"
 const FORMATS: Array<"All" | AssetFormat> = ["All", "PNG", "JPG", "SVG", "PACK"]
 const SORTS: Array<{ label: string; value: AssetSortBy }> = [
   { label: "Latest", value: "latest" },
-  { label: "Relevance", value: "relevance" },
-  { label: "Random", value: "random" },
+  { label: "Most Downloaded", value: "downloads" },
+  { label: "Search Match", value: "relevance" },
 ]
 
 interface FilterBarProps {
@@ -30,7 +30,7 @@ export function FilterBar({
 
   return (
     <section className="border-b border-border-default bg-bg-base">
-      <div className="container-custom flex flex-col justify-between gap-4 py-4 md:flex-row md:items-center">
+      <div className="container-custom flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap no-scrollbar">
           {FORMATS.map((format) => {
             const isActive = activeFormat === format
@@ -41,10 +41,10 @@ export function FilterBar({
                 type="button"
                 onClick={() => onFormatChange(format)}
                 className={cn(
-                  "border px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors duration-150",
+                  "shrink-0 border px-4 py-3 font-mono text-[10px] uppercase tracking-[0.2em] transition-colors duration-150 md:px-5 md:text-xs",
                   isActive
-                    ? "border-accent/30 bg-accent/10 text-accent"
-                    : "border-border-default bg-bg-surface-2 text-text-secondary hover:border-border-strong hover:bg-bg-surface-3 hover:text-text-primary"
+                    ? "border-text-primary bg-transparent text-text-primary"
+                    : "border-border-default bg-bg-surface-2 text-text-secondary hover:border-border-strong hover:text-text-primary"
                 )}
               >
                 {format}
@@ -53,19 +53,20 @@ export function FilterBar({
           })}
         </div>
 
-        <div className="relative">
+        <div className="relative self-start md:self-auto">
           <button
             type="button"
             onClick={() => setIsSortOpen((value) => !value)}
-            className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-text-secondary transition-colors duration-150 hover:text-text-primary"
+            className="flex min-h-11 items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-text-secondary transition-colors duration-150 hover:text-text-primary md:text-xs"
             aria-haspopup="menu"
             aria-expanded={isSortOpen}
           >
-            Sort: <span className="text-text-primary">{activeSortLabel}</span>
+            Sort:
+            <span className="text-text-primary">{activeSortLabel}</span>
             <ChevronDown size={14} />
           </button>
 
-          {isSortOpen && (
+          {isSortOpen ? (
             <>
               <button
                 type="button"
@@ -73,7 +74,7 @@ export function FilterBar({
                 aria-label="Close sort menu"
                 onClick={() => setIsSortOpen(false)}
               />
-              <div className="absolute right-0 top-full z-20 mt-2 w-40 border border-border-default bg-bg-surface">
+              <div className="absolute left-0 top-full z-20 mt-2 min-w-[180px] border border-border-default bg-bg-surface md:left-auto md:right-0">
                 {SORTS.map((sort) => (
                   <button
                     key={sort.value}
@@ -83,8 +84,8 @@ export function FilterBar({
                       setIsSortOpen(false)
                     }}
                     className={cn(
-                      "w-full px-4 py-3 text-left font-mono text-xs uppercase tracking-widest transition-colors duration-150 hover:bg-bg-surface-2",
-                      activeSort === sort.value ? "bg-accent/10 text-accent" : "text-text-secondary"
+                      "w-full px-4 py-3 text-left font-mono text-[10px] uppercase tracking-[0.2em] transition-colors duration-150 hover:bg-bg-surface-2",
+                      activeSort === sort.value ? "text-text-primary" : "text-text-secondary"
                     )}
                   >
                     {sort.label}
@@ -92,7 +93,7 @@ export function FilterBar({
                 ))}
               </div>
             </>
-          )}
+          ) : null}
         </div>
       </div>
     </section>

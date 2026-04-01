@@ -64,11 +64,21 @@ export function DeleteConfirm({
           Confirm carefully
         </p>
 
-        <div className="mt-4 flex items-center justify-end gap-3 border-t border-border-subtle pt-6">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+        <div className="mt-4 flex flex-col gap-3 border-t border-border-subtle pt-6 md:flex-row md:items-center md:justify-end">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={loading}
+            className="min-h-11 w-full md:w-auto"
+          >
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleConfirm} loading={loading}>
+          <Button
+            variant="danger"
+            onClick={handleConfirm}
+            loading={loading}
+            className="min-h-11 w-full md:w-auto"
+          >
             Delete Permanently
           </Button>
         </div>

@@ -5,8 +5,8 @@ import type {
   MutationResult,
 } from "@/components/admin/AssetForm"
 import { del } from "@/lib/blob"
-import type { Asset } from "@/types"
-import { Timestamp } from "firebase-admin/firestore"
+import type { Asset, SiteSettings } from "@/types"
+import { FieldValue, Timestamp } from "firebase-admin/firestore"
 
 export const dynamic = "force-dynamic"
 
@@ -15,6 +15,14 @@ function toAdminAssetView(asset: Asset): AdminAssetView {
     ...asset,
     createdAt: asset.createdAt.toISOString(),
     updatedAt: asset.updatedAt.toISOString(),
+  }
+}
+
+function getDefaultSiteSettings(): SiteSettings {
+  return {
+    sitePages: [],
+    footerTagline: "Assets for creators and designers.",
+    updatedAt: new Date(0),
   }
 }
 
@@ -75,7 +83,9 @@ async function deletePreviewByUrl(previewUrl?: string | null) {
 
 export default async function AdminDashboardPage() {
   const { getAllAssets } = await import("@/lib/assets")
+  const { getSiteSettings } = await import("@/lib/site-settings")
   const assets = await getAllAssets()
+  const siteSettings = await getSiteSettings().catch(() => getDefaultSiteSettings())
   const initialAssets = assets.map(toAdminAssetView)
 
   async function saveAssetAction(
@@ -95,8 +105,12 @@ export default async function AdminDashboardPage() {
           title: payload.title,
           tags: payload.tags,
           format: payload.format,
+          description: payload.description ?? null,
+          sitePageIds: payload.sitePageIds ?? [],
           previewUrl: payload.previewUrl,
           fileStoragePath: payload.fileStoragePath,
+          bundleSize: payload.bundleSize ?? null,
+          fileCount: payload.fileCount ?? null,
           visible: payload.visible,
           createdAt: existingData?.createdAt ?? now,
           updatedAt: now,
@@ -104,6 +118,22 @@ export default async function AdminDashboardPage() {
         },
         { merge: true }
       )
+
+      if (!payload.description) {
+        await assetRef.set({ description: FieldValue.delete() }, { merge: true })
+      }
+
+      if (!payload.sitePageIds || payload.sitePageIds.length === 0) {
+        await assetRef.set({ sitePageIds: FieldValue.delete() }, { merge: true })
+      }
+
+      if (!payload.bundleSize) {
+        await assetRef.set({ bundleSize: FieldValue.delete() }, { merge: true })
+      }
+
+      if (payload.fileCount === undefined) {
+        await assetRef.set({ fileCount: FieldValue.delete() }, { merge: true })
+      }
 
       if (payload.previousPreviewUrl && payload.previousPreviewUrl !== payload.previewUrl) {
         await deletePreviewByUrl(payload.previousPreviewUrl)
@@ -155,12 +185,38 @@ export default async function AdminDashboardPage() {
     }
   }
 
+  async function saveSiteSettingsAction(payload: {
+    sitePages: Array<{
+      id: string
+      slug: string
+      title: string
+      summary: string
+      body: string
+      ctaLabel: string
+      ctaUrl: string
+      visible: boolean
+    }>
+    footerTagline: string
+  }): Promise<MutationResult> {
+    "use server"
+
+    try {
+      const { saveSiteSettings } = await import("@/lib/site-settings")
+      await saveSiteSettings(payload)
+      return { ok: true }
+    } catch (error) {
+      return { error: readErrorMessage(error) }
+    }
+  }
+
   return (
     <AdminDashboardShell
       assets={initialAssets}
+      siteSettings={siteSettings}
       onSaveAsset={saveAssetAction}
       onToggleAsset={toggleAssetAction}
       onDeleteAsset={deleteAssetAction}
+      onSaveSiteSettings={saveSiteSettingsAction}
     />
   )
 }

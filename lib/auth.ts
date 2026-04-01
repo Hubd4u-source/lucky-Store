@@ -19,38 +19,66 @@ export class AuthError extends Error {
   }
 }
 
+function parseCsvEnv(value: string | undefined): string[] {
+  if (!value) {
+    return []
+  }
+
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+export function getAdminEmails(): string[] {
+  const emails = [
+    ...parseCsvEnv(process.env.ADMIN_EMAILS),
+    ...parseCsvEnv(process.env.ADMIN_EMAIL),
+  ]
+
+  return Array.from(new Set(emails.map((email) => email.toLowerCase())))
+}
+
 export function getAdminEmail(): string | null {
-  const email = process.env.ADMIN_EMAIL?.trim()
-  return email ? email : null
+  return getAdminEmails()[0] ?? null
+}
+
+export function getAdminUids(): string[] {
+  const uids = [
+    ...parseCsvEnv(process.env.ADMIN_UIDS),
+    ...parseCsvEnv(process.env.ADMIN_UID),
+    ...parseCsvEnv(process.env.NEXT_PUBLIC_ADMIN_UID),
+  ]
+
+  return Array.from(new Set(uids))
 }
 
 export function getAdminUid(): string | null {
-  const uid = process.env.ADMIN_UID?.trim() ?? process.env.NEXT_PUBLIC_ADMIN_UID?.trim()
-  return uid ? uid : null
+  return getAdminUids()[0] ?? null
 }
 
 export function hasAdminIdentityConfig(): boolean {
-  return Boolean(getAdminEmail() || getAdminUid())
+  return getAdminEmails().length > 0 || getAdminUids().length > 0
 }
 
 export function isAdminEmail(email: string | null | undefined): boolean {
-  const adminEmail = getAdminEmail()
+  const adminEmails = getAdminEmails()
 
-  if (!adminEmail || !email) {
+  if (adminEmails.length === 0 || !email) {
     return false
   }
 
-  return email.trim().toLowerCase() === adminEmail.toLowerCase()
+  return adminEmails.includes(email.trim().toLowerCase())
 }
 
 export function isAdminUid(uid: string | null | undefined): boolean {
-  const adminUid = getAdminUid()
+  const adminUids = getAdminUids()
 
-  if (!adminUid || !uid) {
+  if (adminUids.length === 0 || !uid) {
     return false
   }
 
-  return uid.trim() === adminUid
+  return adminUids.includes(uid.trim())
 }
 
 export function isAdminIdentity(identity: {

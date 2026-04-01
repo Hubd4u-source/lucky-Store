@@ -7,11 +7,6 @@ const PROJECT_ID =
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() ||
   process.env.FIREBASE_ADMIN_PROJECT_ID?.trim() ||
   ''
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim().toLowerCase() || ''
-const ADMIN_UID =
-  process.env.ADMIN_UID?.trim() ||
-  process.env.NEXT_PUBLIC_ADMIN_UID?.trim() ||
-  ''
 const SESSION_ISSUER = PROJECT_ID ? `https://session.firebase.google.com/${PROJECT_ID}` : ''
 
 type CachedCerts = {
@@ -25,6 +20,36 @@ type FirebaseSessionClaims = JWTPayload & {
 }
 
 let cachedCerts: CachedCerts | null = null
+
+function parseCsvEnv(value: string | undefined): string[] {
+  if (!value) {
+    return []
+  }
+
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function getAdminEmails(): string[] {
+  const emails = [
+    ...parseCsvEnv(process.env.ADMIN_EMAILS),
+    ...parseCsvEnv(process.env.ADMIN_EMAIL),
+  ]
+
+  return Array.from(new Set(emails.map((email) => email.toLowerCase())))
+}
+
+function getAdminUids(): string[] {
+  const uids = [
+    ...parseCsvEnv(process.env.ADMIN_UIDS),
+    ...parseCsvEnv(process.env.ADMIN_UID),
+    ...parseCsvEnv(process.env.NEXT_PUBLIC_ADMIN_UID),
+  ]
+
+  return Array.from(new Set(uids))
+}
 
 function clearSessionCookie(response: NextResponse): NextResponse {
   response.cookies.set(SESSION_COOKIE_NAME, '', {
@@ -88,7 +113,10 @@ async function getCerts(): Promise<Record<string, string>> {
 }
 
 async function verifySessionCookie(cookie: string): Promise<FirebaseSessionClaims | null> {
-  if (!PROJECT_ID || !SESSION_ISSUER || (!ADMIN_EMAIL && !ADMIN_UID)) {
+  const adminEmails = getAdminEmails()
+  const adminUids = getAdminUids()
+
+  if (!PROJECT_ID || !SESSION_ISSUER || (adminEmails.length === 0 && adminUids.length === 0)) {
     return null
   }
 
@@ -122,13 +150,13 @@ async function verifySessionCookie(cookie: string): Promise<FirebaseSessionClaim
   }
 
   const emailMatches =
-    Boolean(ADMIN_EMAIL) &&
+    adminEmails.length > 0 &&
     typeof claims.email === 'string' &&
-    claims.email.trim().toLowerCase() === ADMIN_EMAIL
+    adminEmails.includes(claims.email.trim().toLowerCase())
   const uidMatches =
-    Boolean(ADMIN_UID) &&
+    adminUids.length > 0 &&
     typeof claims.sub === 'string' &&
-    claims.sub.trim() === ADMIN_UID
+    adminUids.includes(claims.sub.trim())
 
   if (!emailMatches && !uidMatches) {
     return null

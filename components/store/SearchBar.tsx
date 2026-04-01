@@ -27,7 +27,7 @@ export function SearchBar({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="block w-full border border-border-default bg-bg-surface-2 py-3 pl-10 pr-4 font-body text-sm text-text-primary placeholder:text-text-muted outline-none transition-colors duration-150 focus:border-accent"
+        className="block h-12 w-full border border-border-default bg-bg-surface-2 py-3 pl-10 pr-4 font-body text-sm text-text-primary placeholder:text-text-muted outline-none transition-colors duration-150 focus:border-accent md:h-auto"
       />
     </label>
   )

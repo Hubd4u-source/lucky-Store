@@ -16,7 +16,7 @@ const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
     const toggleId = id ?? reactId
 
     return (
-      <div className="flex items-start gap-3">
+      <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
         <button
           ref={ref}
           id={toggleId}
@@ -26,7 +26,7 @@ const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
           disabled={disabled}
           onClick={() => onCheckedChange(!checked)}
           className={cn(
-            "inline-flex h-6 w-11 items-center border border-border-default bg-bg-surface-2 p-1 transition-colors duration-150 focus-visible:outline-none focus-visible:border-accent disabled:cursor-not-allowed disabled:opacity-50",
+            "mt-0.5 inline-flex h-6 w-11 shrink-0 items-center border border-border-default bg-bg-surface-2 p-1 transition-colors duration-150 focus-visible:outline-none focus-visible:border-accent disabled:cursor-not-allowed disabled:opacity-50",
             checked && "border-accent bg-accent/10",
             className
           )}
@@ -42,13 +42,13 @@ const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
         </button>
 
         {(label || description) && (
-          <label htmlFor={toggleId} className="cursor-pointer select-none">
+          <label htmlFor={toggleId} className="min-w-0 cursor-pointer select-none">
             {label ? (
-              <span className="block font-mono text-xs uppercase tracking-widest text-text-secondary">
+              <span className="block font-mono text-[11px] uppercase tracking-[0.18em] text-text-secondary">
                 {label}
               </span>
             ) : null}
-            {description ? <span className="mt-1 block text-sm text-text-muted">{description}</span> : null}
+            {description ? <span className="mt-1 block text-sm leading-6 text-text-muted">{description}</span> : null}
           </label>
         )}
       </div>

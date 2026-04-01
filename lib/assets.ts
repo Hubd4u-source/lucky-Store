@@ -11,8 +11,12 @@ type AssetDocumentData = {
   title?: unknown
   tags?: unknown
   format?: unknown
+  description?: unknown
+  sitePageIds?: unknown
   previewUrl?: unknown
   fileStoragePath?: unknown
+  bundleSize?: unknown
+  fileCount?: unknown
   visible?: unknown
   createdAt?: unknown
   updatedAt?: unknown
@@ -95,6 +99,30 @@ function toNumber(value: unknown, field: string): number {
   throw new DataLayerError(`Invalid ${field}`, 500, 'serialization-error')
 }
 
+function toOptionalString(value: unknown, field: string): string | undefined {
+  if (value === undefined || value === null || value === '') {
+    return undefined
+  }
+
+  if (typeof value === 'string') {
+    return value
+  }
+
+  throw new DataLayerError(`Invalid ${field}`, 500, 'serialization-error')
+}
+
+function toOptionalNumber(value: unknown, field: string): number | undefined {
+  if (value === undefined || value === null || value === '') {
+    return undefined
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  throw new DataLayerError(`Invalid ${field}`, 500, 'serialization-error')
+}
+
 function toBoolean(value: unknown, field: string): boolean {
   if (typeof value === 'boolean') {
     return value
@@ -130,6 +158,8 @@ function normalizeAssetRecord(id: string, data: AssetDocumentData): Asset {
     })(),
     tags: toStringArray(data.tags, 'tags'),
     format: toAssetFormat(data.format),
+    description: toOptionalString(data.description, 'description'),
+    sitePageIds: Array.isArray(data.sitePageIds) ? toStringArray(data.sitePageIds, 'sitePageIds') : undefined,
     previewUrl: typeof data.previewUrl === 'string' ? data.previewUrl : (() => {
       throw new DataLayerError('Invalid previewUrl', 500, 'serialization-error')
     })(),
@@ -139,6 +169,8 @@ function normalizeAssetRecord(id: string, data: AssetDocumentData): Asset {
         : (() => {
             throw new DataLayerError('Invalid fileStoragePath', 500, 'serialization-error')
           })(),
+    bundleSize: toOptionalString(data.bundleSize, 'bundleSize'),
+    fileCount: toOptionalNumber(data.fileCount, 'fileCount'),
     visible: toBoolean(data.visible, 'visible'),
     createdAt: toDate(data.createdAt, 'createdAt'),
     updatedAt: toDate(data.updatedAt, 'updatedAt'),
@@ -152,7 +184,7 @@ function toPublicAsset(asset: Asset): AssetPublic {
 }
 
 function serializeAsset(asset: Omit<Asset, 'id'>): AssetDocumentData {
-  return {
+  const payload: AssetDocumentData = {
     title: asset.title,
     tags: [...asset.tags],
     format: asset.format,
@@ -163,6 +195,24 @@ function serializeAsset(asset: Omit<Asset, 'id'>): AssetDocumentData {
     updatedAt: Timestamp.fromDate(asset.updatedAt),
     downloadCount: asset.downloadCount,
   }
+
+  if (asset.description !== undefined) {
+    payload.description = asset.description
+  }
+
+  if (asset.sitePageIds !== undefined) {
+    payload.sitePageIds = [...asset.sitePageIds]
+  }
+
+  if (asset.bundleSize !== undefined) {
+    payload.bundleSize = asset.bundleSize
+  }
+
+  if (asset.fileCount !== undefined) {
+    payload.fileCount = asset.fileCount
+  }
+
+  return payload
 }
 
 function serializeAssetUpdate(asset: AssetUpdateData): Record<string, unknown> {
@@ -180,12 +230,28 @@ function serializeAssetUpdate(asset: AssetUpdateData): Record<string, unknown> {
     payload.format = asset.format
   }
 
+  if (asset.description !== undefined) {
+    payload.description = asset.description
+  }
+
+  if (asset.sitePageIds !== undefined) {
+    payload.sitePageIds = [...asset.sitePageIds]
+  }
+
   if (asset.previewUrl !== undefined) {
     payload.previewUrl = asset.previewUrl
   }
 
   if (asset.fileStoragePath !== undefined) {
     payload.fileStoragePath = asset.fileStoragePath
+  }
+
+  if (asset.bundleSize !== undefined) {
+    payload.bundleSize = asset.bundleSize
+  }
+
+  if (asset.fileCount !== undefined) {
+    payload.fileCount = asset.fileCount
   }
 
   if (asset.visible !== undefined) {
@@ -277,10 +343,6 @@ export async function getVisibleAssets(
     })
 
     const publicAssets = assets.map(toPublicAsset)
-
-    if (sortBy === 'random') {
-      return [...publicAssets].sort(() => Math.random() - 0.5)
-    }
 
     return publicAssets
   } catch (error) {

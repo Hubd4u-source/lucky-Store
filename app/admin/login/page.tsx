@@ -104,14 +104,14 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg-base px-4">
-      <div className="w-full max-w-[380px] border border-border-default bg-bg-surface p-10">
-        <div className="mb-10">
+    <main className="flex min-h-screen items-center justify-center bg-bg-base px-4 py-8">
+      <div className="w-full max-w-[420px] border border-border-default bg-bg-surface p-6 md:p-10">
+        <div className="mb-8 md:mb-10">
           <div className="flex items-baseline gap-1">
-            <span className="font-display text-xl font-black tracking-wider text-text-primary">
+            <span className="font-display text-lg font-black tracking-wider text-text-primary md:text-xl">
               LUCKY
             </span>
-            <span className="font-display text-xl font-normal tracking-wider text-accent">
+            <span className="font-display text-lg font-normal tracking-wider text-accent md:text-xl">
               STORE
             </span>
           </div>
@@ -124,7 +124,7 @@ export default function LoginPage() {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="min-h-12 w-full"
             onClick={onGoogleSignIn}
             loading={loading}
           >
@@ -177,7 +177,7 @@ export default function LoginPage() {
             </div>
           ) : null}
 
-          <Button type="submit" variant="primary" className="w-full" loading={loading}>
+          <Button type="submit" variant="primary" className="min-h-12 w-full" loading={loading}>
             Sign In
           </Button>
 

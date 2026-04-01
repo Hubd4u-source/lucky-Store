@@ -1,13 +1,17 @@
 export type AssetFormat = 'PNG' | 'JPG' | 'SVG' | 'PACK'
-export type AssetSortBy = 'latest' | 'relevance' | 'random'
+export type AssetSortBy = 'featured' | 'latest' | 'downloads' | 'relevance'
 
 export interface Asset {
   id: string
   title: string
   tags: string[]
   format: AssetFormat
+  description?: string
+  sitePageIds?: string[]
   previewUrl: string
   fileStoragePath: string
+  bundleSize?: string
+  fileCount?: number
   visible: boolean
   createdAt: Date
   updatedAt: Date
@@ -31,4 +35,27 @@ export interface DownloadResponse {
 
 export interface ApiError {
   error: string
+}
+
+export interface SiteLink {
+  id: string
+  label: string
+  url: string
+}
+
+export interface SitePage {
+  id: string
+  slug: string
+  title: string
+  summary: string
+  body: string
+  ctaLabel: string
+  ctaUrl: string
+  visible: boolean
+}
+
+export interface SiteSettings {
+  sitePages: SitePage[]
+  footerTagline: string
+  updatedAt: Date
 }
