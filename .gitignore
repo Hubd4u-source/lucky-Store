@@ -1,0 +1,7 @@
+.next
+node_modules
+.env.local
+.env*.local
+firebase-debug.log
+tsconfig.tsbuildinfo
+.vercel
