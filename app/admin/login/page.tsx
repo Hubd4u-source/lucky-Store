@@ -3,7 +3,7 @@
 import * as React from "react"
 import { signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth"
 import { useForm } from "react-hook-form"
-import { auth, googleProvider } from "@/lib/firebase"
+import { getFirebaseAuth, getGoogleProvider } from "@/lib/firebase"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 
@@ -40,6 +40,7 @@ export default function LoginPage() {
   })
 
   const submitLogin = async (idToken: string) => {
+    const auth = getFirebaseAuth()
     const response = await fetch("/api/auth/session", {
       method: "POST",
       headers: {
@@ -66,6 +67,7 @@ export default function LoginPage() {
     setError("")
 
     try {
+      const auth = getFirebaseAuth()
       const result = await signInWithEmailAndPassword(
         auth,
         values.email.trim(),
@@ -86,7 +88,8 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const result = await signInWithPopup(auth, googleProvider)
+      const auth = getFirebaseAuth()
+      const result = await signInWithPopup(auth, getGoogleProvider())
       const idToken = await result.user.getIdToken()
       await submitLogin(idToken)
     } catch (error) {
