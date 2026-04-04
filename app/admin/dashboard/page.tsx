@@ -107,7 +107,7 @@ export default async function AdminDashboardPage() {
           format: payload.format,
           description: payload.description ?? null,
           sitePageIds: payload.sitePageIds ?? [],
-          previewUrl: payload.previewUrl,
+          previewUrls: payload.previewUrls,
           fileStoragePath: payload.fileStoragePath,
           bundleSize: payload.bundleSize ?? null,
           fileCount: payload.fileCount ?? null,
@@ -135,8 +135,14 @@ export default async function AdminDashboardPage() {
         await assetRef.set({ fileCount: FieldValue.delete() }, { merge: true })
       }
 
-      if (payload.previousPreviewUrl && payload.previousPreviewUrl !== payload.previewUrl) {
-        await deletePreviewByUrl(payload.previousPreviewUrl)
+      // Handle cleanup of old preview images if they were replaced
+      if (payload.previousPreviewUrls) {
+        const currentUrls = new Set(payload.previewUrls)
+        const deletedUrls = payload.previousPreviewUrls.filter(url => !currentUrls.has(url))
+        
+        for (const url of deletedUrls) {
+          await deletePreviewByUrl(url)
+        }
       }
 
       if (
@@ -169,14 +175,16 @@ export default async function AdminDashboardPage() {
 
   async function deleteAssetAction(payload: {
     assetId: string
-    previewUrl: string
+    previewUrls: string[]
     fileStoragePath: string
   }): Promise<MutationResult> {
     "use server"
 
     try {
       const { deleteAsset } = await import("@/lib/assets")
-      await deletePreviewByUrl(payload.previewUrl)
+      for (const url of payload.previewUrls) {
+        await deletePreviewByUrl(url)
+      }
       await deleteStorageObject(payload.fileStoragePath)
       await deleteAsset(payload.assetId)
       return { ok: true }

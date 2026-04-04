@@ -36,7 +36,7 @@ function PageAssetCard({
     <article className="overflow-hidden border border-border-default bg-bg-surface">
       <div className="relative aspect-[4/3] border-b border-border-default bg-bg-surface-2">
         <Image
-          src={asset.previewUrl}
+          src={asset.previewUrls[0]}
           alt={asset.title}
           fill
           className="object-cover"

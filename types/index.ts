@@ -8,7 +8,7 @@ export interface Asset {
   format: AssetFormat
   description?: string
   sitePageIds?: string[]
-  previewUrl: string
+  previewUrls: string[]
   fileStoragePath: string
   bundleSize?: string
   fileCount?: number

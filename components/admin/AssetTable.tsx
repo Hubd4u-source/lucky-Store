@@ -82,7 +82,7 @@ export function AssetTable({
                   <td className="px-6 py-4">
                     <div className="relative h-9 w-12 overflow-hidden border border-border-subtle bg-bg-surface-3">
                       <Image
-                        src={asset.previewUrl}
+                        src={asset.previewUrls[0]}
                         alt={asset.title}
                         fill
                         className="object-cover"
@@ -167,7 +167,7 @@ export function AssetTable({
               <div className="flex gap-3 p-3">
                 <div className="relative h-[72px] w-[96px] shrink-0 overflow-hidden border border-border-default bg-bg-surface-3">
                   <Image
-                    src={asset.previewUrl}
+                    src={asset.previewUrls[0]}
                     alt={asset.title}
                     fill
                     className="object-cover"

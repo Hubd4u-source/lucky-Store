@@ -44,7 +44,7 @@ export function AssetCard({
       <div className="relative aspect-[4/3] overflow-hidden bg-bg-surface-2">
         <Link href={`/assets/${asset.id}`} className="absolute inset-0">
           <Image
-            src={asset.previewUrl}
+            src={asset.previewUrls[0]}
             alt={asset.title}
             fill
             className="object-cover opacity-95 transition-opacity duration-150 group-hover:opacity-100"

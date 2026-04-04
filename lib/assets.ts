@@ -13,6 +13,7 @@ type AssetDocumentData = {
   format?: unknown
   description?: unknown
   sitePageIds?: unknown
+  previewUrls?: unknown
   previewUrl?: unknown
   fileStoragePath?: unknown
   bundleSize?: unknown
@@ -160,9 +161,13 @@ function normalizeAssetRecord(id: string, data: AssetDocumentData): Asset {
     format: toAssetFormat(data.format),
     description: toOptionalString(data.description, 'description'),
     sitePageIds: Array.isArray(data.sitePageIds) ? toStringArray(data.sitePageIds, 'sitePageIds') : undefined,
-    previewUrl: typeof data.previewUrl === 'string' ? data.previewUrl : (() => {
-      throw new DataLayerError('Invalid previewUrl', 500, 'serialization-error')
-    })(),
+    previewUrls: Array.isArray(data.previewUrls)
+      ? toStringArray(data.previewUrls, 'previewUrls')
+      : typeof data.previewUrl === 'string'
+      ? [data.previewUrl]
+      : (() => {
+          throw new DataLayerError('Invalid previewUrls', 500, 'serialization-error')
+        })(),
     fileStoragePath:
       typeof data.fileStoragePath === 'string'
         ? data.fileStoragePath
@@ -188,7 +193,7 @@ function serializeAsset(asset: Omit<Asset, 'id'>): AssetDocumentData {
     title: asset.title,
     tags: [...asset.tags],
     format: asset.format,
-    previewUrl: asset.previewUrl,
+    previewUrls: [...asset.previewUrls],
     fileStoragePath: asset.fileStoragePath,
     visible: asset.visible,
     createdAt: Timestamp.fromDate(asset.createdAt),
@@ -238,8 +243,8 @@ function serializeAssetUpdate(asset: AssetUpdateData): Record<string, unknown> {
     payload.sitePageIds = [...asset.sitePageIds]
   }
 
-  if (asset.previewUrl !== undefined) {
-    payload.previewUrl = asset.previewUrl
+  if (asset.previewUrls !== undefined) {
+    payload.previewUrls = [...asset.previewUrls]
   }
 
   if (asset.fileStoragePath !== undefined) {

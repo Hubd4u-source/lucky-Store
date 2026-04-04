@@ -49,6 +49,7 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
   const [downloaded, setDownloaded] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [selectedAsset, setSelectedAsset] = React.useState<AssetPublic | null>(null)
+  const [activeImageIndex, setActiveImageIndex] = React.useState(0)
   const collection = getPrimaryCollectionForAsset(asset)
   const isFavorite = favoriteSet.has(asset.id)
 
@@ -101,15 +102,44 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
 
             <div className="mt-8 grid gap-10 xl:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
               <div className="space-y-5">
-                <div className="relative aspect-[4/3] overflow-hidden border border-border-default bg-bg-surface-2">
-                  <Image
-                    src={asset.previewUrl}
-                    alt={asset.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1280px) 100vw, 60vw"
-                    priority
-                  />
+                <div className="flex flex-col gap-4">
+                  {/* Main Gallery Image */}
+                  <div className="relative aspect-[4/3] w-full overflow-hidden border border-border-default bg-black/40 flex items-center justify-center group/main">
+                    <Image
+                      src={asset.previewUrls[activeImageIndex]}
+                      alt={asset.title}
+                      fill
+                      className="object-contain p-4" // "Perfectly seen"
+                      sizes="(max-width: 1280px) 100vw, 60vw"
+                      priority
+                    />
+                  </div>
+
+                  {/* Thumbnail Selector */}
+                  {asset.previewUrls.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border-default scrollbar-track-transparent">
+                      {asset.previewUrls.map((url, index) => (
+                        <button
+                          key={url + index}
+                          onClick={() => setActiveImageIndex(index)}
+                          className={cn(
+                            "relative aspect-square w-20 shrink-0 border transition-all duration-150 overflow-hidden",
+                            activeImageIndex === index 
+                              ? "border-accent ring-1 ring-accent" 
+                              : "border-border-default opacity-60 hover:opacity-100 hover:border-border-strong"
+                          )}
+                        >
+                          <Image
+                            src={url}
+                            alt={`Preview ${index + 1}`}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">

@@ -11,6 +11,7 @@ import { Toggle } from "@/components/ui/Toggle"
 import type { BlobPutResult } from "@/types/blob"
 import type { Asset, AssetFormat, SitePage } from "@/types"
 import { UploadProgress } from "@/components/admin/UploadProgress"
+import { GalleryGrid } from "@/components/admin/GalleryGrid"
 
 export type AdminAssetView = Omit<Asset, "createdAt" | "updatedAt"> & {
   createdAt: string
@@ -27,11 +28,11 @@ export type AssetMutationPayload = {
   description?: string
   sitePageIds?: string[]
   visible: boolean
-  previewUrl: string
+  previewUrls: string[]
   fileStoragePath: string
   bundleSize?: string
   fileCount?: number
-  previousPreviewUrl?: string
+  previousPreviewUrls?: string[]
   previousFileStoragePath?: string
 }
 
@@ -130,9 +131,8 @@ export function AssetForm({
   onCancel,
 }: AssetFormProps) {
   const [assetId] = React.useState(() => initialData?.id ?? uuidv4())
-  const [previewFile, setPreviewFile] = React.useState<File | null>(null)
+  const [gallery, setGallery] = React.useState<(File | string)[]>(() => initialData?.previewUrls ?? [])
   const [assetFile, setAssetFile] = React.useState<File | null>(null)
-  const [objectPreviewUrl, setObjectPreviewUrl] = React.useState<string | null>(null)
   const [submitError, setSubmitError] = React.useState("")
   const [progress, setProgress] = React.useState(0)
   const [progressLabel, setProgressLabel] = React.useState("")
@@ -160,34 +160,8 @@ export function AssetForm({
     },
   })
 
-  const previewUrl = objectPreviewUrl ?? initialData?.previewUrl ?? ""
-
-  React.useEffect(() => {
-    return () => {
-      if (objectPreviewUrl) {
-        URL.revokeObjectURL(objectPreviewUrl)
-      }
-    }
-  }, [objectPreviewUrl])
-
-  const handlePreviewChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-
-    if (!file) {
-      return
-    }
-
-    if (objectPreviewUrl) {
-      URL.revokeObjectURL(objectPreviewUrl)
-    }
-
-    setPreviewFile(file)
-    setObjectPreviewUrl(URL.createObjectURL(file))
-  }
-
   const handleAssetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-
     if (file) {
       setAssetFile(file)
     }
@@ -198,24 +172,31 @@ export function AssetForm({
     setSubmitting(true)
 
     try {
-      const nextPreviewUrl = initialData?.previewUrl ?? ""
-      let resolvedPreviewUrl = nextPreviewUrl
+      const resolvedPreviewUrls: string[] = []
       let resolvedFileStoragePath = initialData?.fileStoragePath ?? ""
 
-      if (!initialData && !previewFile) {
-        throw new Error("Preview image is required.")
+      if (gallery.length === 0) {
+        throw new Error("At least one preview image is required.")
       }
 
       if (!initialData && !assetFile) {
         throw new Error("Asset file is required.")
       }
 
-      if (previewFile) {
-        setProgressLabel("Uploading preview")
-        const previewBlob = await uploadFile("preview", assetId, previewFile, (value) => {
-          setProgress(Math.max(1, Math.round(value * 0.45)))
+      // Upload gallery images
+      setProgressLabel("Uploading gallery")
+      for (let i = 0; i < gallery.length; i++) {
+        const item = gallery[i]
+        if (typeof item === "string") {
+          resolvedPreviewUrls.push(item)
+          continue
+        }
+
+        const progressBase = (i / gallery.length) * 50
+        const blob = await uploadFile("preview", assetId, item, (percent) => {
+          setProgress(Math.round(progressBase + (percent / gallery.length) * 0.5))
         })
-        resolvedPreviewUrl = previewBlob.url
+        resolvedPreviewUrls.push(blob.url)
       }
 
       if (assetFile) {
@@ -240,11 +221,11 @@ export function AssetForm({
         description: values.description.trim() || undefined,
         sitePageIds: values.sitePageIds,
         visible: values.visible,
-        previewUrl: resolvedPreviewUrl,
+        previewUrls: resolvedPreviewUrls,
         fileStoragePath: resolvedFileStoragePath,
         bundleSize: values.bundleSize.trim() || undefined,
         fileCount: values.fileCount.trim() ? Number.parseInt(values.fileCount.trim(), 10) : undefined,
-        previousPreviewUrl: initialData?.previewUrl,
+        previousPreviewUrls: initialData?.previewUrls,
         previousFileStoragePath: initialData?.fileStoragePath,
       })
 
@@ -414,28 +395,18 @@ export function AssetForm({
 
           <div className="flex flex-col gap-2">
             <label className="font-mono text-[10px] uppercase tracking-widest text-text-secondary">
-              Preview Image
+              Product Images
             </label>
-            <div className="relative flex aspect-[4/3] min-h-[240px] cursor-pointer items-center justify-center overflow-hidden border border-dashed border-border-strong bg-bg-surface-2 transition-colors hover:border-accent">
-              {previewUrl ? (
-                <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-text-muted transition-colors duration-150 hover:text-accent">
-                  <ImageIcon size={24} />
-                  <span className="font-mono text-[10px] uppercase tracking-widest">
-                    Upload Preview
-                  </span>
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePreviewChange}
-                className="absolute inset-0 cursor-pointer opacity-0"
+            <div className="border border-border-subtle bg-bg-surface-2 p-4">
+              <GalleryGrid 
+                images={gallery}
+                onAdd={(files) => setGallery([...gallery, ...files])}
+                onRemove={(index) => setGallery(gallery.filter((_, i) => i !== index))}
+                onReorder={setGallery}
               />
             </div>
-            <p className="text-right font-mono text-[9px] uppercase tracking-wider text-text-muted">
-              JPG or PNG, max 2MB
+            <p className="mt-1 text-xs text-text-muted leading-relaxed">
+              Images will be displayed in the order shown. First image is the main catalog thumbnail.
             </p>
           </div>
 

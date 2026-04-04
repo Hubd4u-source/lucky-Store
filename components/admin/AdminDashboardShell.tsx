@@ -20,7 +20,7 @@ type SaveAssetAction = (payload: AssetMutationPayload) => Promise<MutationResult
 type ToggleAssetAction = (assetId: string, currentVisible: boolean) => Promise<MutationResult>
 type DeleteAssetAction = (payload: {
   assetId: string
-  previewUrl: string
+  previewUrls: string[]
   fileStoragePath: string
 }) => Promise<MutationResult>
 type SaveSiteSettingsAction = (payload: {
@@ -258,7 +258,7 @@ export function AdminDashboardShell({
           onConfirm={() =>
             onDeleteAsset({
               assetId: deleteTarget.id,
-              previewUrl: deleteTarget.previewUrl,
+              previewUrls: deleteTarget.previewUrls,
               fileStoragePath: deleteTarget.fileStoragePath,
             })
           }
