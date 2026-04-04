@@ -100,16 +100,16 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
               Back To Catalog
             </Link>
 
-            <div className="mt-8 grid gap-10 xl:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
-              <div className="space-y-5">
+            <div className="mt-8 grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+              <div className="min-w-0 space-y-5">
                 <div className="flex flex-col gap-4">
                   {/* Main Gallery Image */}
-                  <div className="relative aspect-[4/3] w-full overflow-hidden border border-border-default bg-black/40 flex items-center justify-center group/main">
+                  <div className="relative aspect-[4/3] w-full max-w-full overflow-hidden border border-border-default bg-black/40 flex items-center justify-center group/main">
                     <Image
                       src={asset.previewUrls[activeImageIndex]}
                       alt={asset.title}
                       fill
-                      className="object-contain p-4" // "Perfectly seen"
+                      className="object-contain p-2 md:p-4" // Optimized padding for mobile
                       sizes="(max-width: 1280px) 100vw, 60vw"
                       priority
                     />
@@ -142,7 +142,8 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
                   )}
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                {/* Relocated Value Props for Mobile - now hidden or below title section */}
+                <div className="hidden grid-cols-1 gap-4 md:grid md:grid-cols-3">
                   <div className="border border-border-default bg-bg-surface p-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
                       Instant Download
@@ -170,7 +171,7 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
                 </div>
               </div>
 
-              <div className="flex flex-col gap-6 border border-border-default bg-bg-surface p-6">
+              <div className="flex min-w-0 flex-col gap-6 border border-border-default bg-bg-surface p-5 md:p-8">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={BADGE_VARIANTS[asset.format]}>{asset.format}</Badge>
                   {collection ? <Badge>{collection.title}</Badge> : null}
@@ -180,7 +181,7 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
                   <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-accent">
                     Asset Detail
                   </p>
-                  <h1 className="mt-3 text-4xl font-black uppercase tracking-[0.04em] text-text-primary">
+                  <h1 className="mt-3 break-words text-3xl font-black uppercase tracking-[0.04em] text-text-primary md:text-4xl">
                     {asset.title}
                   </h1>
                   <p className="mt-5 text-base leading-7 text-text-secondary">
@@ -221,7 +222,7 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
                   {asset.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="border border-border-default bg-bg-surface-2 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-text-secondary"
+                      className="break-words border border-border-default bg-bg-surface-2 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-text-secondary"
                     >
                       {tag}
                     </span>
@@ -278,8 +279,8 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
         <TrustBar />
 
         <section className="container-custom py-16">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="border border-border-default bg-bg-surface p-6">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_minmax(0,0.6fr)]">
+            <div className="min-w-0 border border-border-default bg-bg-surface p-6">
               <StoreSection
                 eyebrow="Usage"
                 title="What this asset adds to the catalog"
@@ -287,12 +288,12 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
               />
             </div>
 
-            <div className="border border-border-default bg-bg-surface p-6">
+            <div className="min-w-0 border border-border-default bg-bg-surface p-6">
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
                 <Layers3 size={12} />
                 Delivery Snapshot
               </div>
-              <p className="mt-4 text-sm leading-7 text-text-secondary">
+              <p className="mt-4 break-words text-sm leading-7 text-text-secondary">
                 Format: {asset.format}
                 <br />
                 Collection: {collection?.title ?? "General catalog"}
@@ -336,6 +337,29 @@ export function AssetDetailView({ asset, relatedAssets }: AssetDetailViewProps) 
           selectedAsset ? () => toggleFavorite(selectedAsset.id) : undefined
         }
       />
+
+      {/* Sticky Mobile Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center gap-3 border-t border-border-default/50 bg-bg-surface/95 p-4 backdrop-blur-md md:hidden">
+        <Button
+          onClick={handleDownload}
+          loading={loading}
+          disabled={downloaded}
+          className="flex-1 min-h-12"
+          icon={loading ? undefined : Download}
+        >
+          {downloaded ? "Downloaded" : "Get Asset"}
+        </Button>
+        <Button
+          variant={isFavorite ? "secondary" : "outline"}
+          onClick={() => toggleFavorite(asset.id)}
+          className="aspect-square p-0 min-h-12 w-12 flex items-center justify-center"
+        >
+          <Heart size={18} className={isFavorite ? "fill-current" : ""} />
+        </Button>
+      </div>
+
+      {/* Spacing for sticky bar */}
+      <div className="h-20 md:hidden" />
     </div>
   )
 }

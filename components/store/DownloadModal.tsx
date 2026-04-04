@@ -122,8 +122,8 @@ export function DownloadModal({
         </button>
 
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-          <div className="flex flex-col gap-4">
-            <div className="relative aspect-[4/3] w-full overflow-hidden border border-border-default bg-bg-surface-2">
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="relative aspect-[4/3] w-full max-w-full overflow-hidden border border-border-default bg-bg-surface-2">
               <Image
                 src={asset.previewUrls[0]}
                 alt={asset.title}
@@ -157,10 +157,10 @@ export function DownloadModal({
             </div>
           </div>
 
-          <div className="flex flex-col gap-5">
+          <div className="flex min-w-0 flex-col gap-5">
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-4">
-                <h3 className="text-lg font-semibold text-text-primary sm:text-xl">{asset.title}</h3>
+                <h3 className="break-words text-lg font-semibold text-text-primary sm:text-xl">{asset.title}</h3>
                 <Badge variant={BADGE_VARIANTS[asset.format]}>{asset.format}</Badge>
               </div>
 

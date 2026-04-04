@@ -66,6 +66,11 @@ html {
   border-radius: 0 !important;
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   min-height: 100vh;
   background-color: var(--bg-base);
